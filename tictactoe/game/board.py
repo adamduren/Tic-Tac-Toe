@@ -1,11 +1,12 @@
 X_MARK = 1
 O_MARK = -1
-PLAYERS = (X_MARK, O_MARK)
-PLAYER_STRINGS = (
+PLAYER_BOARD_MARKS = (X_MARK, O_MARK)
+PLAYER_BOARD_REPR = (
     (None, '-'),
     (X_MARK, 'X'),
     (O_MARK, 'O'),
 )
+
 NUM_CELLS = 9
 
 
@@ -25,8 +26,7 @@ class Board(object):
 
     def _is_valid_board(self, board):
         is_valid_cell_state = lambda col: (
-            True if col is X_MARK or col is O_MARK or col is None
-            else False
+            True if col in PLAYER_BOARD_MARKS or col is None else False
         )
 
         if len(board) != NUM_CELLS:
@@ -38,7 +38,7 @@ class Board(object):
         return True
 
     def take_turn(self, player, move):
-        if player not in PLAYERS:
+        if player not in PLAYER_BOARD_MARKS:
             raise ValueError('Invalid player passed.')
 
         if player is self.last_player:
@@ -54,38 +54,34 @@ class Board(object):
         self.board_state[move] = player
 
     def is_terminal_state(self):
-        def get_winner_or_none(candidate):
-            if all([move == candidate[0] for move in candidate]):
-                return candidate[0]
+        def is_three_in_a_row(candidate):
+            if candidate[0] and all([move == candidate[0] for move in candidate]):
+                return True
             else:
-                return None
+                return False
 
-        winner = (
+        return (
             # Check for row win
-            get_winner_or_none(self.board_state[0:3]) or
-            get_winner_or_none(self.board_state[3:6]) or
-            get_winner_or_none(self.board_state[6:9]) or
+            is_three_in_a_row(self.board_state[0:3]) or
+            is_three_in_a_row(self.board_state[3:6]) or
+            is_three_in_a_row(self.board_state[6:9]) or
 
             # Check for column win
-            get_winner_or_none(self.board_state[0::3]) or
-            get_winner_or_none(self.board_state[1::3]) or
-            get_winner_or_none(self.board_state[2::3]) or
+            is_three_in_a_row(self.board_state[0::3]) or
+            is_three_in_a_row(self.board_state[1::3]) or
+            is_three_in_a_row(self.board_state[2::3]) or
 
             # Check for diagnoal win
-            get_winner_or_none(self.board_state[2:7:2]) or
-            get_winner_or_none(self.board_state[0:9:4])
+            is_three_in_a_row(self.board_state[2:7:2]) or
+            is_three_in_a_row(self.board_state[0:9:4])
         )
-
-        is_terminal_state = True if winner else False
-
-        return is_terminal_state, winner
 
     def positions_remaining(self):
         return [i for i, cell in enumerate(self.board_state) if cell is None]
 
     def __str__(self):
         board_string = ''
-        player_strings = dict(PLAYER_STRINGS)
+        player_strings = dict(PLAYER_BOARD_REPR)
 
         for i, state in enumerate(self.board_state):
             board_string += '{} {}'.format(player_strings[state], ' ')

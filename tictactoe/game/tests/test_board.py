@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .. import Board
+from ..board import Board
 
 
 class TestBoardCreation(TestCase):
