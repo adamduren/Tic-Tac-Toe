@@ -6,6 +6,7 @@ PLAYER_STRINGS = (
     (X_MARK, 'X'),
     (O_MARK, 'O'),
 )
+NUM_CELLS = 9
 
 
 class Board(object):
@@ -14,7 +15,7 @@ class Board(object):
 
     def __init__(self, board_state=None):
         if not board_state:
-            board_state = [None] * 9
+            board_state = [None] * NUM_CELLS
 
         if not self._is_valid_board(board_state):
                 raise ValueError('Not a valid board state.')
@@ -28,7 +29,7 @@ class Board(object):
             else False
         )
 
-        if len(board) != 9:
+        if len(board) != NUM_CELLS:
             return False
 
         if not all(map(is_valid_cell_state, board)):
@@ -38,13 +39,16 @@ class Board(object):
 
     def take_turn(self, player, move):
         if player not in PLAYERS:
-            raise ValueError('Invalid player passed')
+            raise ValueError('Invalid player passed.')
 
         if player is self.last_player:
-            raise ValueError('Player played out of turn')
+            raise ValueError('Player played out of turn.')
 
-        if move not in self.valid_moves():
-            raise ValueError('Invalid move')
+        if move >= NUM_CELLS:
+            raise ValueError('Not a valid position.')
+
+        if move not in self.positions_remaining():
+            raise ValueError('That position is already taken.')
 
         self.last_player = player
         self.board_state[move] = player
@@ -76,7 +80,7 @@ class Board(object):
 
         return is_terminal_state, winner
 
-    def valid_moves(self):
+    def positions_remaining(self):
         return [i for i, cell in enumerate(self.board_state) if cell is None]
 
     def __str__(self):
