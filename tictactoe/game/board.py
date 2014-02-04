@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from .player import Player, AiPlayer
 
 X_MARK = 1
@@ -65,12 +63,15 @@ class Board(object):
         if action not in self.get_actions(state):
             raise ValueError('That position is already taken.')
 
-        state = deepcopy(state)
+        new_state = {
+            'board': state['board'][:],
+            'current_player': state['next_player'],
+            'next_player': state['current_player']
+        }
 
-        state['board'][action] = state['current_player'].mark
-        state['current_player'], state['next_player'] = state['next_player'], state['current_player']
+        new_state['board'][action] = state['current_player'].mark
 
-        return state
+        return new_state
 
     def determine_winner(self, state):
         def winner_or_none(cells):
