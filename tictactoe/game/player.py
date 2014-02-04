@@ -9,7 +9,7 @@ class Player(object):
         self.name = name
         self.mark = mark
 
-    def make_turn_decision(self, board):
+    def make_turn_decision(self, state):
         decision = int(raw_input())
 
         # Clean up after ourselves

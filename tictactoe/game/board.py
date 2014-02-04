@@ -1,3 +1,7 @@
+from copy import deepcopy
+
+from .player import Player, AiPlayer
+
 X_MARK = 1
 O_MARK = -1
 PLAYER_BOARD_MARKS = (X_MARK, O_MARK)
@@ -11,80 +15,99 @@ NUM_CELLS = 9
 
 
 class Board(object):
-    board_state = None
-    last_player = None
+    def get_initial_state(self, state=None):
+        if state is None:
+            state = {
+                'board': [None] * NUM_CELLS,
+                'current_player': Player('Human', PLAYER_BOARD_MARKS[0]),
+                'next_player': AiPlayer('Ai', PLAYER_BOARD_MARKS[1])
+            }
 
-    def __init__(self, board_state=None):
-        if not board_state:
-            board_state = [None] * NUM_CELLS
+        if not self._is_valid_state(state):
+                raise ValueError('Not in a valid state.')
 
-        if not self._is_valid_board(board_state):
-                raise ValueError('Not a valid board state.')
+        return state
 
-        self.board_state = board_state
-        self.turns = []
-
-    def _is_valid_board(self, board):
+    def _is_valid_state(self, state):
         is_valid_cell_state = lambda col: (
             True if col in PLAYER_BOARD_MARKS or col is None else False
         )
 
-        if len(board) != NUM_CELLS:
+        if len(state['board']) != NUM_CELLS:
             return False
 
-        if not all(map(is_valid_cell_state, board)):
+        if not all(map(is_valid_cell_state, state['board'])):
             return False
 
         return True
 
-    def take_turn(self, player, move):
-        if player not in PLAYER_BOARD_MARKS:
-            raise ValueError('Invalid player passed.')
+    def get_actions(self, state):
+        return [i for i, cell in enumerate(state['board']) if cell is None]
 
-        if player is self.last_player:
-            raise ValueError('Player played out of turn.')
+    def to_move(self, state):
+        return state['current_player']
 
-        if move >= NUM_CELLS:
+    def utility(self, state, player):
+        winner = self.determine_winner(state)
+
+        if winner is None:
+            return 0
+
+        if winner == player:
+            return 1
+
+        return -1
+
+    def result(self, state, action):
+        if action >= NUM_CELLS:
             raise ValueError('Not a valid position.')
 
-        if move not in self.positions_remaining():
+        if action not in self.get_actions(state):
             raise ValueError('That position is already taken.')
 
-        self.last_player = player
-        self.board_state[move] = player
+        state = deepcopy(state)
 
-    def is_terminal_state(self):
-        def is_three_in_a_row(candidate):
-            if candidate[0] and all([move == candidate[0] for move in candidate]):
-                return True
+        state['board'][action] = state['current_player'].mark
+        state['current_player'], state['next_player'] = state['next_player'], state['current_player']
+
+        return state
+
+    def determine_winner(self, state):
+        def winner_or_none(cells):
+            if cells[0] and all([move == cells[0] for move in cells]):
+                return cells[0]
             else:
-                return False
+                return None
 
-        return (
+        board = state['board']
+
+        winner = (
             # Check for row win
-            is_three_in_a_row(self.board_state[0:3]) or
-            is_three_in_a_row(self.board_state[3:6]) or
-            is_three_in_a_row(self.board_state[6:9]) or
+            winner_or_none(board[0:3]) or
+            winner_or_none(board[3:6]) or
+            winner_or_none(board[6:9]) or
 
             # Check for column win
-            is_three_in_a_row(self.board_state[0::3]) or
-            is_three_in_a_row(self.board_state[1::3]) or
-            is_three_in_a_row(self.board_state[2::3]) or
+            winner_or_none(board[0::3]) or
+            winner_or_none(board[1::3]) or
+            winner_or_none(board[2::3]) or
 
             # Check for diagnoal win
-            is_three_in_a_row(self.board_state[2:7:2]) or
-            is_three_in_a_row(self.board_state[0:9:4])
+            winner_or_none(board[2:7:2]) or
+            winner_or_none(board[0:9:4])
         )
 
-    def positions_remaining(self):
-        return [i for i, cell in enumerate(self.board_state) if cell is None]
+        return winner
 
-    def __str__(self):
+    def is_terminal_state(self, state):
+        return self.determine_winner(state) or not self.get_actions(state)
+
+    def display(self, state):
         board_string = ''
         player_strings = dict(PLAYER_BOARD_REPR)
 
-        for i, state in enumerate(self.board_state):
-            board_string += '{} {}'.format(player_strings[state], ' ')
+        for i, mark in enumerate(state['board']):
+            board_string += '{} {}'.format(player_strings[mark], ' ')
 
             if i % 3 == 2 and i != 8:
                 board_string += '\n'

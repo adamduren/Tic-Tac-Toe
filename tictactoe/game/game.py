@@ -1,51 +1,28 @@
-from itertools import cycle
-
-from .board import Board, PLAYER_BOARD_MARKS
-from .player import Player, AiPlayer
+from .board import Board
 
 
 class ConsoleGame(object):
-    board = None
-
-    def __init__(self, players=None):
-        if players is None:
-            players = [
-                Player('Human', PLAYER_BOARD_MARKS[0]),
-                AiPlayer('Ai', PLAYER_BOARD_MARKS[1])
-            ]
-
-        if len(players) != 2:
-            raise ValueError('Tic-Tac-Toe requires two players')
-
-        self.players = players
-
-    def start(self, board_state=None):
-        board = self.board = Board(board_state)
-        turns = cycle(self.players)
+    def start(self, state=None):
+        board = Board()
+        state = board.get_initial_state(state)
 
         while True:
-            print(board)
+            print(board.display(state))
 
-            game_is_over = board.is_terminal_state()
-
-            if game_is_over:
+            if board.is_terminal_state(state):
                 break
 
-            player = turns.next()
+            player = state['current_player']
 
             print('{}\'s turn'.format(player.name))
 
             try:
-                board.take_turn(player.mark, player.make_turn_decision(board))
+                state = board.result(state, player.make_turn_decision(state))
             except ValueError as e:
                 print('{} Would you like to continue playing? '.format(e.message))
 
                 if raw_input() not in ['y', 'yes']:
                     break
 
-                # We need to advance the turn by one since the player
-                # made a mistake
-                turns.next()
-
-        if game_is_over:
+        if board.is_terminal_state(state):
             print('{} Wins!'.format(player.name))

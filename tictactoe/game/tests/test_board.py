@@ -1,12 +1,24 @@
 from django.test import TestCase
 
-from ..board import Board
+from ..board import Board, PLAYER_BOARD_MARKS
+from ..player import Player, AiPlayer
 
 
-class TestBoardCreation(TestCase):
+class TestBoardStateOnCreation(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.board = Board()
+
+    def setUp(self):
+        self.state = {
+            'board': None,
+            'current_player': Player('Human', PLAYER_BOARD_MARKS[0]),
+            'next_player': AiPlayer('Ai', PLAYER_BOARD_MARKS[1])
+        }
 
     def test_initial_board_state_no_init(self):
-        board = Board()
+        state = self.board.get_initial_state()
 
         initial_board = [
             None, None, None,
@@ -14,7 +26,7 @@ class TestBoardCreation(TestCase):
             None, None, None
         ]
 
-        self.assertEqual(board.board_state, initial_board)
+        self.assertEqual(state['board'], initial_board)
 
     def test_initial_board_state_valid(self):
         initial_board = [
@@ -23,9 +35,10 @@ class TestBoardCreation(TestCase):
             None, None, None
         ]
 
-        board = Board(initial_board)
+        self.state['board'] = initial_board
+        state = self.board.get_initial_state(self.state)
 
-        self.assertEqual(board.board_state, initial_board)
+        self.assertEqual(state['board'], initial_board)
 
     def test_initial_board_state_invalid_column_dimensions(self):
 
@@ -35,7 +48,10 @@ class TestBoardCreation(TestCase):
             None, None, None
         ]
 
-        self.assertRaises(ValueError, Board, initial_board)
+        self.state['board'] = initial_board
+        state_func = self.board.get_initial_state
+
+        self.assertRaises(ValueError, state_func, self.state)
 
     def test_initial_board_state_invalid_row_dimensions(self):
 
@@ -44,7 +60,10 @@ class TestBoardCreation(TestCase):
             None, None, None
         ]
 
-        self.assertRaises(ValueError, Board, initial_board)
+        self.state['board'] = initial_board
+        state_func = self.board.get_initial_state
+
+        self.assertRaises(ValueError, state_func, self.state)
 
     def test_initial_board_state_invalid_cell_value(self):
 
@@ -54,4 +73,7 @@ class TestBoardCreation(TestCase):
             None, 5, None
         ]
 
-        self.assertRaises(ValueError, Board, initial_board)
+        self.state['board'] = initial_board
+        state_func = self.board.get_initial_state
+
+        self.assertRaises(ValueError, state_func, self.state)
