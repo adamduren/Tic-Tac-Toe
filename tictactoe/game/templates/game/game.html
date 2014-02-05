@@ -1,5 +1,24 @@
 {% extends "tictactoe/base.html" %}
 
+{% load staticfiles %}
+
+{% block extra_styles %}
+<link rel="stylesheet" type="text/css" href="{% static "css/tictactoe.css" %}">
+{% endblock %}
+
 {% block title %}Tic-Tac-Toe{% endblock %}
-{% block body %}{% endblock %}
+{% block body %}
+    <div id="game"></div>
+{% endblock %}
 {% block footer %}&copy; Adam Duren 2014{% endblock %}
+{% block extra_scripts %}
+<script type="text/javascript" src="{% static "js/vendor/d3.js" %}"></script>
+<script type="text/javascript" src="{% static "js/tictactoe.js" %}" charset="utf-8"></script>
+<script type="text/javascript">
+$(function() {
+  'use strict';
+
+  window.tictactoe.TicTacToe('#game');
+});
+</script>
+{% endblock %}
